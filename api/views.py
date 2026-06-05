@@ -49,13 +49,6 @@ class TeacherAPIView(ListCreateAPIView):
     queryset = Teacher.objects.all()
     serializer_class = TeacherSerializer
 
-    def get_queryset(self):
-        queryset = Teacher.objects.all()
-        course = self.request.query_params.get('course')
-        if course:
-            queryset = queryset.filter(course_id=course)
-        return queryset
-
 class TeacherRetrieveAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Teacher.objects.all()
     serializer_class = TeacherSerializer

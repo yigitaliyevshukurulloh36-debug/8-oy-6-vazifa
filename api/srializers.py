@@ -9,8 +9,8 @@ class CourseSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class StudentSerializer(serializers.ModelSerializer):
-    course_write = serializers.PrimaryKeyRelatedField(
-        queryset=Course.objects.all(), write_only=True, source='course'
+    course_write = serializers.ChoiceField(
+        choices=Course.objects.all(), write_only=True,
     )
 
 
@@ -21,9 +21,13 @@ class StudentSerializer(serializers.ModelSerializer):
 
     
     def create(self, validated_data):
-        return Student.objects.create(**validated_data)
+        course_write = validated_data.pop("course_write")
+        student = Student.objects.create(course=course_write, **validated_data)
+        student.save()
+        return student
 
     def update(self, instance, validated_data):
+        instance.course =  validated_data.pop("course_write") or instance.course
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
@@ -45,8 +49,8 @@ class TeacherSerializer(serializers.ModelSerializer):
         depth = 1
 
 class PaymentSerializer(serializers.ModelSerializer):
-    payment_write = serializers.PrimaryKeyRelatedField(
-        queryset=Student.objects.all(), write_only=True, source='student'
+    payment_write = serializers.ChoiceField(
+        choices=Student.objects.all(), write_only=True,
     )
 
     class Meta:
@@ -54,11 +58,22 @@ class PaymentSerializer(serializers.ModelSerializer):
         fields = ['id', 'student', 'payment_write', 'amount', 'payment_date']
         depth = 1
 
+        
+
     def create(self, validated_data):
-        return Payment.objects.create(**validated_data)
+        payment_write = validated_data.pop("payment_write")
+        student = Student.objects.create(payment=payment_write, **validated_data)
+        student.save()
+        return student
     
+
+
+
+
     def update(self, instance, validated_data):
+        instance.payment = validated_data.pop("payment_write") or instance.payment
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
         return instance
+            
